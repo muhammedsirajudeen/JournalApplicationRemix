@@ -11,6 +11,7 @@ import { AppSidebar } from "~/components/appside-bar";
 import { Toaster } from "~/components/ui/sonner"
 
 import "./tailwind.css";
+import { StoreProvider } from "./lib/GlobalProvider";
 
 export const links: LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -38,16 +39,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <SidebarProvider defaultOpen={false}>
-          <AppSidebar />
-          <main>
-            <SidebarTrigger />
+        <StoreProvider>
+          <SidebarProvider defaultOpen={false}>
+            <AppSidebar />
+            <main>
+              <SidebarTrigger />
 
-            {children}
-          </main>
-          <Toaster className="bg-black" />
+              {children}
+            </main>
+            <Toaster className="bg-black" />
 
-        </SidebarProvider>
+          </SidebarProvider>
+        </StoreProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

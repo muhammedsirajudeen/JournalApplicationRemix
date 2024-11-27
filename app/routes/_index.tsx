@@ -1,8 +1,10 @@
-/* eslint-disable react/no-unknown-property */
-import type { MetaFunction } from "@remix-run/node";
+import { LoaderFunction, MetaFunction,redirect } from "@remix-run/node";
+import {  Link } from "@remix-run/react";
 import { AnimatePresence, motion } from "motion/react";
 import ResponsiveMotionDiv from "~/components/animatedBox";
 
+import cookie from "cookie"
+import axiosInstance from "~/lib/axiosInstance";
 export const meta: MetaFunction = () => {
   return [
     { title: "Personal Journal Application" },
@@ -10,6 +12,25 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export const loader:LoaderFunction = async ({request})=>{
+  try{
+    const cookies=cookie.parse(request.headers.get("cookie")||"")
+    const token=cookies.token || null
+    if(token){
+      const response=(await axiosInstance.post('/auth/tokenVerify',{
+        token:token
+      }))
+      if(response.status===200){
+        return redirect('/journal')
+      }
+    }else{
+      return null
+    }
+  }catch(error){
+    console.log(error)
+    return null
+  }
+}
 
 export default function Index() {
 
@@ -27,9 +48,11 @@ export default function Index() {
         >
           PERSONAL JOURNAL.
         </motion.h1>      </AnimatePresence>
-        <a href="/authentication">
-        <button className="absolute top-0 right-2 bg-black rounded-sm text-white text-sm p-1 mt-2 poppins-regular flex items-center justify-center" >signin</button>
-        </a>
+        
+            <Link to="/authentication">
+              <button className="absolute top-0 right-2 bg-black rounded-sm text-white text-sm p-1 mt-2 poppins-regular flex items-center justify-center" >signin</button>
+            </Link>
+        
     </div>
   );
 }

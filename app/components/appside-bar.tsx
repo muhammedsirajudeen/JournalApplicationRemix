@@ -1,4 +1,4 @@
-import { Home, Book, Settings } from "lucide-react"
+import { Home, Book, Settings, LogOut } from "lucide-react"
 
 import {
     Sidebar,
@@ -10,6 +10,10 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "../components/ui/sidebar"
+import { useStore } from "~/lib/GlobalProvider"
+import { clearAllCookies } from "~/lib/utils"
+import { useNavigate } from "@remix-run/react"
+import { toast } from "sonner"
 
 // Menu items.
 const items = [
@@ -25,22 +29,24 @@ const items = [
     },
     {
         title: "Journal",
-        url: "#",
+        url: "/journal",
         icon: Book,
     },
-//     {
-//         title: "Search",
-//         url: "#",
-//         icon: Search,
-//     },
-//     {
-//         title: "Settings",
-//         url: "#",
-//         icon: Settings,
-//     },
+    {
+        title:"Logout",
+        url:"#",
+        icon:LogOut
+    }
 ]
 
 export function AppSidebar() {
+    const {authenticated}=useStore()
+    const navigate=useNavigate()
+    const logoutHandler=()=>{
+        clearAllCookies()
+        toast.success('Logged out successfully')
+        setTimeout(()=>navigate('/'),1000)
+    }
     return (
         <Sidebar>
             <SidebarContent>
@@ -48,16 +54,31 @@ export function AppSidebar() {
                     <SidebarGroupLabel>Personal Journal</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {items.map((item) => (
-                                <SidebarMenuItem key={item.title}>
+                            {items.map((item) => 
+                            {
+                                
+                                return(
+                                    <SidebarMenuItem key={item.title} className={`${(item.title==="Logout" && !authenticated) && "hidden"}`} >
                                     <SidebarMenuButton asChild>
-                                        <a href={item.url}>
+                                        {
+                                            item.title==="Logout" ?
+                                            <button onClick={logoutHandler} >
+                                                <item.icon/>
+                                                <span>{item.title}</span>
+                                            </button>
+                                            :
+                                            <a href={item.url}>
                                             <item.icon />
                                             <span>{item.title}</span>
                                         </a>
+                                        }
+
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
-                            ))}
+
+                                )
+                            }
+                            )}
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>

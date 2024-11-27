@@ -24,7 +24,7 @@ const formSchema = z.object({
         message: "Email must be at least 2 characters.",
       })
       .email({
-        message: "Invalid email format.", // Ensures a valid email format
+        message: "Invalid email format.",
       }),
   
     password: z.string()
@@ -48,7 +48,6 @@ export function ProfileForm(
         isLogin:boolean
     }
 ) {
-    // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -58,12 +57,11 @@ export function ProfileForm(
     })
     const navigate=useNavigate()
 
-    // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        if(!isLogin){
             try{
+                const url=isLogin ? '/auth/verify' : 'auth/create'
                 const response=(
-                    await axiosInstance.post('/auth/create',
+                    await axiosInstance.post(url,
                         {
                             email:values.email,
                             password:values.password
@@ -72,18 +70,29 @@ export function ProfileForm(
                 )
                 console.log(response.status)
                 if(response.status===200){
-                    toast.success("User Created Successfully")
+                    if(isLogin){
+                        toast.success("User signed  in Successfully")
+                    }else{
+                        toast.success("User Created Successfully")
+                    }
+                    window.localStorage.setItem("token",response.data.token)
+                    document.cookie = `token=${response.data.token}; path=/; max-age=3600; secure; samesite=strict`;
+
                     setTimeout(()=>{
                         navigate('/journal')
                     },500)
                 }
             }catch(error){
                 console.log(error)
-                toast.error("User Already Exists")
+                if(isLogin){
+                    toast.error("User verification failed")
+                }else{
+                    toast.error("User Already Exists")
+                }
 
             }
         }
-    }
+    // }
     return (
         <Form  {...form} >
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
