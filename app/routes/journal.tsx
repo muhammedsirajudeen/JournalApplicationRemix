@@ -1,13 +1,14 @@
-import { LoaderFunction, redirect } from "@remix-run/node";
-import { motion } from "motion/react"
+import { json, LoaderFunction, redirect } from "@remix-run/node";
+import { AnimatePresence, motion } from "motion/react"
 import { useStore } from "~/lib/GlobalProvider";
 import cookie from "cookie"
 import axiosInstance from "~/lib/axiosInstance";
-// import { Button } from "~/components/ui/button";
-// import { toast } from "sonner";
-import JournalDialog from "~/components/journalDialog";
-import { useEffect } from "react";
+import JournalDialog, { color } from "~/components/journalDialog";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { useLoaderData } from "@remix-run/react";
+import JournalCard from "~/components/JournalCard";
 export const loader: LoaderFunction = async ({ request }) => {
+    console.log('action')
     try {
         const cookies = cookie.parse(request.headers.get("cookie") || "")
         const token = cookies.token || null
@@ -16,7 +17,13 @@ export const loader: LoaderFunction = async ({ request }) => {
                 token: token
             }))
             if (response.status === 200) {
-                return null
+                const response = (await axiosInstance.post('/journal/get',
+                    {
+                        token: token
+                    }
+                ))
+                console.log(response.data)
+                return json({ journals: response.data.journals })
             }
         } else {
             return redirect('/')
@@ -26,17 +33,32 @@ export const loader: LoaderFunction = async ({ request }) => {
         return redirect('/')
     }
 }
-//example of server side data mutation
-// export function action() {
-//     // Simply returning null to verify the action is working
-//     console.log('action run')
-//     return null; 
-// }
+
+
+export interface JournalEntry {
+    id: string
+    journal: string
+    date: string
+    email: string
+    color: color
+}
+interface JournalLoader {
+    journals: JournalEntry[]
+}
 export default function Journal() {
-    const { setAuth } = useStore()
-    useEffect(()=>{
+    const { setAuth, journals, setJournals } = useStore()
+    const renderCount = useRef<number>(0)
+    const JournalData = useLoaderData() as JournalLoader
+    const [open,setOpen]=useState<boolean>(false)
+    useEffect(() => {
+        if (renderCount.current === 0) {
+            if (JournalData) {
+                setJournals(JournalData.journals)
+            }
+        }
+        renderCount.current++
         setAuth(true)
-    },[setAuth])
+    }, [JournalData, setAuth, setJournals])
     return (
         <div className="flex items-center justify-center flex-col w-screen">
             <motion.div className="bg-white lg:w-96 flex items-center justify-center lg:h-20 rounded-sm sm:w-48 sm:h-10">
@@ -49,8 +71,24 @@ export default function Journal() {
                     JOURNAL.
                 </motion.h1>
             </motion.div>
-            <JournalDialog />
-            {/* <Button onClick={JournalCreator} variant="outline" className="mt-10">Create</Button> */}
+            <JournalDialog open={open} setOpen={setOpen} />
+            <AnimatePresence>
+                <div className="flex w-full items-center justify-evenly flex-wrap">
+                    {journals.map((journal) => (
+                        <Fragment key={journal.id}>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+
+                                <JournalCard setOpen={setOpen} journalEntry={journal} />
+                            </motion.div>
+                        </Fragment>
+                    ))}
+                </div>
+            </AnimatePresence>
         </div>
     )
 }
