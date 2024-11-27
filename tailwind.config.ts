@@ -14,7 +14,8 @@ export default {
         sm: 'calc(var(--radius) - 4px)'
       },
       fontSize: {
-        largest: '9vh'
+        largest: '9vh',
+        secondlargest:'4vh'
       },
       colors: {
         background: 'hsl(var(--background))',
